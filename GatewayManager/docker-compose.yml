@@ -1,0 +1,33 @@
+version: '2.1'
+services:
+  gatewaymanager-mysql:
+    container_name: gatewaymanager-mysql
+    image: 'mysql'
+    environment:
+      MYSQL_DATABASE: gatewaymanager
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_ROOT_HOST: '%'
+    ports:
+      - '3306:3306'
+    restart: always
+    networks:
+      - back-tier
+    healthcheck:
+      test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+  gatewaymanager-app:
+    image: gatewaymanager-app
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    ports:
+      - '8080:8080'
+    depends_on:
+      gatewaymanager-mysql:
+          condition: service_healthy
+    networks:
+      - back-tier
+networks:
+  back-tier:
+    driver: bridge
